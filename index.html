@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Transparansi Kas - Khodrat Bendahara</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Demo Banner -->
+  <div id="demoNoticeBanner" class="demo-banner d-none">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Berjalan dalam <strong>Mode Demo (Data Lokal)</strong>.
+    Hubungkan Google Spreadsheet melalui <a href="admin.html">Pengaturan Admin</a>.
+  </div>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar navbar-green navbar-expand-lg sticky-top py-2">
+    <div class="container">
+      <!-- Brand -->
+      <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="index.html">
+        <span class="brand-icon"><i class="bi bi-wallet2"></i></span>
+        <div class="lh-sm">
+          <div class="fw-bold text-dark" id="navAppName" style="font-size:1rem; letter-spacing:-0.4px;">Khodrat Bendahara</div>
+          <div class="fw-semibold" id="navOrgName" style="font-size:0.72rem; color:var(--tx-muted);">Transparansi Keuangan</div>
+        </div>
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <i class="bi bi-list fs-4" style="color:var(--tx-body);"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <li class="nav-item"><a class="nav-link active" href="#ringkasan"><i class="bi bi-speedometer2 me-1"></i>Ringkasan</a></li>
+          <li class="nav-item"><a class="nav-link" href="#pengeluaran"><i class="bi bi-arrow-up-right-circle me-1"></i>Pengeluaran</a></li>
+          <li class="nav-item"><a class="nav-link" href="#kas-anggota"><i class="bi bi-people me-1"></i>Iuran Anggota</a></li>
+          <li class="nav-item"><a class="nav-link" href="#grafik"><i class="bi bi-bar-chart-line me-1"></i>Grafik</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+          <!-- Filter Tahun -->
+          <div class="input-group input-group-sm" style="width:155px;">
+            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+            <select class="form-select form-select-sm fw-semibold" id="filterTahun"></select>
+          </div>
+          <!-- Refresh -->
+          <button class="btn btn-outline-secondary btn-sm" id="btnRefresh" title="Muat Ulang">
+            <i class="bi bi-arrow-clockwise" id="refreshIcon"></i>
+          </button>
+          <!-- Cetak -->
+          <button class="btn btn-outline-secondary btn-sm no-print" onclick="window.print()" title="Cetak Laporan">
+            <i class="bi bi-printer"></i>
+          </button>
+          <!-- Admin -->
+          <a href="admin.html" class="btn btn-green btn-sm px-3 d-inline-flex align-items-center gap-1">
+            <i class="bi bi-shield-lock-fill"></i><span>Area Admin</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main class="py-4">
+    <div class="container">
+
+      <!-- Loading -->
+      <div id="loadingIndicator" class="text-center py-5">
+        <div class="spinner-border" style="color:var(--g-700);" role="status"><span class="visually-hidden">Memuat...</span></div>
+        <p class="mt-2 fw-semibold" style="color:var(--tx-muted);">Memuat data transparansi kas...</p>
+      </div>
+
+      <div id="mainDashboard" class="d-none">
+
+        <!-- ── HERO BANNER ── -->
+        <div class="row mb-4" id="ringkasan">
+          <div class="col-12">
+            <div class="hero-green p-4 p-md-5">
+              <div class="row align-items-center g-4">
+                <div class="col-lg-8" style="position:relative;z-index:1;">
+                  <span class="hero-label mb-3 d-inline-flex">
+                    <i class="bi bi-patch-check-fill"></i> Transparansi Finansial Akuntabel
+                  </span>
+                  <h1 class="hero-title display-6 fw-bold mb-2" id="heroTitle">Portal Transparansi Kas</h1>
+                  <p class="hero-desc mb-0">
+                    Sistem informasi keuangan terbuka. Setiap penerimaan iuran dan realisasi pengeluaran dana dapat dipantau bersama secara akurat dan <em>real-time</em>.
+                  </p>
+                </div>
+                <div class="col-lg-4 text-lg-end" style="position:relative;z-index:1;">
+                  <div class="hero-meta d-inline-flex">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Diperbarui: <strong id="lastUpdated">—</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── KARTU RINGKASAN ── -->
+        <div class="row g-3 mb-4">
+          <!-- Pemasukan -->
+          <div class="col-md-4">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body p-4 d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="card-label mb-1">Total Pemasukan Kas</div>
+                  <div class="fw-bold mb-1" id="statKasMasuk" style="font-size:1.65rem; color:var(--clr-income);">Rp 0</div>
+                  <div style="font-size:0.8rem; color:var(--tx-muted);" id="subKasMasuk">Tahun terpilih</div>
+                </div>
+                <div class="icon-box" style="background:var(--clr-income-bg); color:var(--clr-income);">
+                  <i class="bi bi-arrow-down-left-circle-fill"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Pengeluaran -->
+          <div class="col-md-4">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body p-4 d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="card-label mb-1">Total Pengeluaran Kas</div>
+                  <div class="fw-bold mb-1" id="statKasKeluar" style="font-size:1.65rem; color:var(--clr-expense);">Rp 0</div>
+                  <div style="font-size:0.8rem; color:var(--tx-muted);" id="subKasKeluar">Tahun terpilih</div>
+                </div>
+                <div class="icon-box" style="background:var(--clr-expense-bg); color:var(--clr-expense);">
+                  <i class="bi bi-arrow-up-right-circle-fill"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Saldo -->
+          <div class="col-md-4">
+            <div class="card stat-card stat-saldo h-100 border-0">
+              <div class="card-body p-4 d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="card-label">Saldo Kas Aktual</span>
+                    <span class="saldo-badge">TERSEDIA</span>
+                  </div>
+                  <div class="card-value fw-bold mb-1" style="font-size:1.65rem;" id="statSaldoKas">Rp 0</div>
+                  <div class="card-sub" style="font-size:0.8rem;" id="subSaldoKas">Akumulasi dana aktif</div>
+                </div>
+                <div class="icon-box"><i class="bi bi-safe2-fill"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TABEL PENGELUARAN ── -->
+        <div class="row mb-4" id="pengeluaran">
+          <div class="col-12">
+            <div class="content-card">
+              <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="card-title">
+                    <i class="bi bi-receipt-cutoff" style="color:var(--clr-expense);"></i>
+                    Transparansi Pengeluaran Dana
+                  </div>
+                  <div class="card-subtitle">Rincian penggunaan kas: tanggal, keperluan, nominal, penanggung jawab, dan bukti nota.</div>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <div class="input-group input-group-sm" style="width:195px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchPengeluaran" class="form-control" placeholder="Cari keperluan / PJ…">
+                  </div>
+                  <select id="filterKategoriPengeluaran" class="form-select form-select-sm" style="width:150px;">
+                    <option value="">Semua Kategori</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="thead-green">
+                      <tr>
+                        <th class="ps-4" style="width:120px;"><i class="bi bi-calendar-date me-1"></i>Tanggal</th>
+                        <th style="width:120px;"><i class="bi bi-tag me-1"></i>Kategori</th>
+                        <th><i class="bi bi-card-text me-1"></i>Keperluan / Rincian</th>
+                        <th class="text-end" style="width:135px;"><i class="bi bi-cash-coin me-1"></i>Nominal</th>
+                        <th style="width:160px;"><i class="bi bi-person-badge me-1"></i>Penanggung Jawab</th>
+                        <th class="text-center" style="width:95px;"><i class="bi bi-image me-1"></i>Bukti</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tablePengeluaranBody"></tbody>
+                  </table>
+                </div>
+                <div id="emptyPengeluaran" class="empty-state d-none">
+                  <i class="bi bi-folder2-open empty-icon"></i>
+                  <p>Belum ada catatan pengeluaran pada periode ini.</p>
+                </div>
+              </div>
+
+              <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span style="font-size:0.82rem; color:var(--tx-muted);" id="countPengeluaran">Menampilkan 0 data</span>
+                <span class="fw-bold" style="color:var(--tx-heading);">
+                  Subtotal: <span style="color:var(--clr-expense);" id="subtotalPengeluaran">Rp 0</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MATRIKS KAS ANGGOTA ── -->
+        <div class="row mb-4" id="kas-anggota">
+          <div class="col-12">
+            <div class="content-card">
+              <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="card-title">
+                    <i class="bi bi-grid-3x3-gap-fill" style="color:var(--g-700);"></i>
+                    Matriks Pembayaran Iuran Anggota
+                  </div>
+                  <div class="card-subtitle">
+                    Status kelunasan iuran bulanan, tahun <strong id="labelTahunKas">2026</strong>.
+                    Iuran standar: <strong id="labelNominalIuran">Rp 20.000</strong>/bulan.
+                  </div>
+                </div>
+                <div class="input-group input-group-sm" style="width:210px;">
+                  <span class="input-group-text"><i class="bi bi-person-search"></i></span>
+                  <input type="text" id="searchAnggota" class="form-control" placeholder="Cari nama anggota…">
+                </div>
+              </div>
+
+              <!-- Legend -->
+              <div class="legend-strip">
+                <span class="legend-label"><i class="bi bi-info-circle me-1"></i>Keterangan:</span>
+                <span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Lunas</span>
+                <span class="badge-unpaid"><i class="bi bi-x-circle"></i> Belum Bayar</span>
+                <span class="iuran-info">Total tersebayar: <strong id="totalKasMasukMatrix">Rp 0</strong></span>
+              </div>
+
+              <div class="card-body p-0">
+                <div class="table-matrix-wrapper">
+                  <table class="table table-bordered table-matrix mb-0">
+                    <thead class="thead-green">
+                      <tr>
+                        <th><i class="bi bi-person-fill me-1"></i>Nama Anggota</th>
+                        <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th>
+                        <th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th>
+                        <th style="min-width:115px;"><i class="bi bi-coin me-1"></i>Terbayar</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableMatrixKasBody"></tbody>
+                  </table>
+                </div>
+                <div id="emptyAnggota" class="empty-state d-none">
+                  <i class="bi bi-people empty-icon"></i>
+                  <p>Tidak ada anggota yang cocok dengan pencarian.</p>
+                </div>
+              </div>
+
+              <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span style="font-size:0.82rem; color:var(--tx-muted);" id="countAnggota">0 anggota</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── GRAFIK ── -->
+        <div class="row g-4 mb-4" id="grafik">
+          <!-- Bar Chart Arus Kas -->
+          <div class="col-lg-8">
+            <div class="content-card h-100">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="bi bi-bar-chart-steps" style="color:var(--g-700);"></i>
+                  Grafik Arus Kas Bulanan
+                </div>
+                <div class="card-subtitle">Perbandingan pemasukan vs pengeluaran per bulan.</div>
+              </div>
+              <div class="card-body"><canvas id="chartArusKas" height="260"></canvas></div>
+            </div>
+          </div>
+          <!-- Donut Kategori -->
+          <div class="col-lg-4">
+            <div class="content-card h-100">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="bi bi-pie-chart-fill" style="color:var(--clr-amber);"></i>
+                  Proporsi Pengeluaran
+                </div>
+                <div class="card-subtitle">Berdasarkan kategori pengeluaran.</div>
+              </div>
+              <div class="card-body d-flex flex-column justify-content-center">
+                <canvas id="chartKategoriPengeluaran" height="220"></canvas>
+                <div id="emptyPieChart" class="empty-state d-none">
+                  <i class="bi bi-pie-chart empty-icon"></i>
+                  <p>Belum ada data pengeluaran untuk grafik ini.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /mainDashboard -->
+    </div>
+  </main>
+
+  <!-- ── Modal Bukti Nota ── -->
+  <div class="modal fade" id="modalBuktiNota" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Bukti Pengeluaran / Nota</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center p-4" id="buktiContent"></div>
+        <div class="modal-footer">
+          <a id="btnOpenExternalBukti" href="#" target="_blank" class="btn btn-outline-green btn-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Buka di Tab Baru
+          </a>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i>Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="mt-auto">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <strong id="footerAppName">Khodrat Bendahara</strong>
+        &copy; <span id="footerYear">2026</span>
+        <div style="font-size:0.78rem; color:var(--tx-muted);">Sistem Transparansi Dana Kas Terpadu</div>
+      </div>
+      <div class="d-flex gap-3">
+        <a href="admin.html"><i class="bi bi-shield-lock me-1"></i>Dashboard Admin</a>
+        <a href="https://github.com" target="_blank"><i class="bi bi-github me-1"></i>Dokumentasi</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin - Khodrat Bendahara</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Demo Banner -->
+  <div id="demoNoticeBanner" class="demo-banner d-none">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Admin dalam <strong>Mode Demo (Data Lokal)</strong>.
+    Hubungkan Google Spreadsheet di tab <strong>Pengaturan</strong>.
+  </div>
+
+  <!-- ══════════════════════════ HALAMAN LOGIN ══════════════════════════ -->
+  <div id="loginScreen" class="d-none login-bg d-flex align-items-center justify-content-center py-5">
+    <div class="container" style="max-width:440px;">
+      <div class="login-card p-2">
+        <div class="card-body p-4">
+
+          <!-- Header Login -->
+          <div class="text-center mb-4">
+            <span class="brand-icon mx-auto mb-3" style="width:58px;height:58px;font-size:1.6rem;">
+              <i class="bi bi-shield-lock-fill"></i>
+            </span>
+            <h4 class="fw-bold mt-2" style="color:var(--tx-heading);">Portal Bendahara</h4>
+            <p style="color:var(--tx-muted);font-size:0.88rem;">Masukkan password untuk mengakses pengelolaan kas.</p>
+          </div>
+
+          <form id="formLogin">
+            <div class="mb-3">
+              <label for="adminPassword" class="form-label">
+                <i class="bi bi-key-fill me-1"></i>Password Admin
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                <input type="password" class="form-control" id="adminPassword" placeholder="Masukkan password…" required>
+                <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="form-text mt-1" id="loginHint">
+                <i class="bi bi-info-circle me-1"></i>Password default demo: <code>admin</code>
+              </div>
+            </div>
+
+            <div id="loginError" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
+            <button type="submit" class="btn btn-green w-100 py-2" id="btnLoginSubmit">
+              <span id="btnLoginText"><i class="bi bi-box-arrow-in-right me-1"></i>Masuk ke Dashboard</span>
+              <span id="btnLoginSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+            </button>
+          </form>
+
+          <div class="text-center mt-4">
+            <a href="index.html" style="color:var(--g-700);font-size:0.88rem;font-weight:600;text-decoration:none;">
+              <i class="bi bi-arrow-left me-1"></i>Kembali ke Halaman Publik
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ DASHBOARD ADMIN ══════════════════════════ -->
+  <div id="adminApp" class="d-none">
+
+    <!-- ── Navbar Admin ── -->
+    <nav class="admin-navbar navbar navbar-expand-lg sticky-top py-2">
+      <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="#">
+          <span class="brand-icon"><i class="bi bi-wallet2"></i></span>
+          <div class="lh-sm">
+            <div class="fw-bold text-white" style="font-size:0.95rem;">Khodrat Bendahara</div>
+            <div class="fw-semibold" style="font-size:0.7rem;color:var(--g-400);">
+              <i class="bi bi-shield-check me-1"></i>Admin Panel
+            </div>
+          </div>
+        </a>
+
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <!-- Filter Tahun -->
+          <select class="admin-year-select form-select" id="adminFilterTahun"></select>
+          <!-- Lihat Publik -->
+          <a href="index.html" target="_blank"
+             class="btn btn-admin-nav d-inline-flex align-items-center gap-1"
+             title="Lihat Halaman Publik">
+            <i class="bi bi-eye-fill"></i>
+            <span class="d-none d-lg-inline">Publik</span>
+          </a>
+          <!-- Logout -->
+          <button class="btn btn-admin-nav btn-admin-danger d-inline-flex align-items-center gap-1" id="btnLogout" title="Keluar dari Admin">
+            <i class="bi bi-box-arrow-right"></i>
+            <span class="d-none d-lg-inline">Keluar</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ── Main Admin ── -->
+    <main class="py-4">
+      <div class="container">
+
+        <!-- Tab Navigasi -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          <ul class="nav nav-pills flex-wrap gap-1" id="adminTab" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-overview" type="button">
+                <i class="bi bi-speedometer2 me-1"></i>Ringkasan
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-kas-masuk" type="button">
+                <i class="bi bi-arrow-down-left-circle me-1"></i>Kas Masuk
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-kas-keluar" type="button">
+                <i class="bi bi-arrow-up-right-circle me-1"></i>Kas Keluar
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-anggota" type="button">
+                <i class="bi bi-people me-1"></i>Anggota
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-pengaturan" type="button">
+                <i class="bi bi-gear me-1"></i>Pengaturan
+              </button>
+            </li>
+          </ul>
+
+          <button class="btn btn-outline-secondary btn-sm" id="btnAdminRefresh">
+            <i class="bi bi-arrow-clockwise me-1" id="adminRefreshIcon"></i>Muat Ulang
+          </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="adminTabContent">
+
+          <!-- ═══ TAB 1: OVERVIEW ═══ -->
+          <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+
+            <!-- Kartu Stat Overview -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="card stat-card h-100 border-0">
+                  <div class="card-body p-4 d-flex justify-content-between align-items-center gap-3">
+                    <div>
+                      <div class="card-label mb-1">Total Pemasukan</div>
+                      <div class="fw-bold mb-1" id="ovStatMasuk" style="font-size:1.5rem;color:var(--clr-income);">Rp 0</div>
+                      <div style="font-size:0.8rem;color:var(--tx-muted);" id="ovSubMasuk">0 transaksi</div>
+                    </div>
+                    <div class="icon-box" style="background:var(--clr-income-bg);color:var(--clr-income);">
+                      <i class="bi bi-arrow-down-left-circle-fill"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card stat-card h-100 border-0">
+                  <div class="card-body p-4 d-flex justify-content-between align-items-center gap-3">
+                    <div>
+                      <div class="card-label mb-1">Total Pengeluaran</div>
+                      <div class="fw-bold mb-1" id="ovStatKeluar" style="font-size:1.5rem;color:var(--clr-expense);">Rp 0</div>
+                      <div style="font-size:0.8rem;color:var(--tx-muted);" id="ovSubKeluar">0 pengeluaran</div>
+                    </div>
+                    <div class="icon-box" style="background:var(--clr-expense-bg);color:var(--clr-expense);">
+                      <i class="bi bi-arrow-up-right-circle-fill"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card stat-card stat-saldo h-100 border-0">
+                  <div class="card-body p-4 d-flex justify-content-between align-items-center gap-3">
+                    <div>
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="card-label">Saldo Aktual</span>
+                        <span class="saldo-badge">TERSEDIA</span>
+                      </div>
+                      <div class="card-value fw-bold mb-1" style="font-size:1.5rem;" id="ovStatSaldo">Rp 0</div>
+                      <div class="card-sub" style="font-size:0.8rem;">Total akumulasi dana</div>
+                    </div>
+                    <div class="icon-box"><i class="bi bi-safe2-fill"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Aksi Cepat -->
+            <div class="content-card mb-4">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="bi bi-lightning-charge-fill" style="color:var(--clr-amber);"></i>
+                  Aksi Cepat Bendahara
+                </div>
+              </div>
+              <div class="card-body d-flex flex-wrap gap-2">
+                <button class="btn btn-green d-inline-flex align-items-center gap-2" onclick="openModalTambahKasMasuk()">
+                  <i class="bi bi-plus-circle-fill"></i>Catat Kas Masuk Manual
+                </button>
+                <button class="btn btn-danger d-inline-flex align-items-center gap-2" onclick="openModalTambahKasKeluar()">
+                  <i class="bi bi-dash-circle-fill"></i>Catat Pengeluaran Baru
+                </button>
+                <button class="btn btn-outline-green d-inline-flex align-items-center gap-2" onclick="openModalTambahAnggota()">
+                  <i class="bi bi-person-plus-fill"></i>Tambah Anggota
+                </button>
+                <a href="index.html" target="_blank" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+                  <i class="bi bi-eye"></i>Cek Tampilan Publik
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB 2: KAS MASUK ═══ -->
+          <div class="tab-pane fade" id="tab-kas-masuk" role="tabpanel">
+
+            <!-- Matriks Checklist -->
+            <div class="content-card mb-4">
+              <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="card-title">
+                    <i class="bi bi-grid-3x3-gap-fill" style="color:var(--g-700);"></i>
+                    Matriks Checklist Kas Masuk
+                  </div>
+                  <div class="card-subtitle">Klik tombol bulan untuk mengubah status Lunas / Belum Lunas secara instan.</div>
+                </div>
+                <button class="btn btn-green btn-sm d-inline-flex align-items-center gap-1" onclick="openModalTambahKasMasuk()">
+                  <i class="bi bi-pencil-square"></i>Input Manual
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-matrix-wrapper">
+                  <table class="table table-bordered table-matrix mb-0">
+                    <thead class="thead-green">
+                      <tr>
+                        <th><i class="bi bi-person-fill me-1"></i>Nama Anggota</th>
+                        <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th>
+                        <th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th>
+                        <th><i class="bi bi-coin me-1"></i>Terbayar</th>
+                      </tr>
+                    </thead>
+                    <tbody id="adminTableMatrixBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Riwayat Kas Masuk -->
+            <div class="content-card">
+              <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="card-title">
+                  <i class="bi bi-clock-history" style="color:var(--g-700);"></i>
+                  Riwayat Detail Transaksi Kas Masuk
+                </div>
+                <div class="input-group input-group-sm" style="width:210px;">
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
+                  <input type="text" id="searchRiwayatKasMasuk" class="form-control" placeholder="Cari nama anggota…">
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="thead-green">
+                      <tr>
+                        <th class="ps-3"><i class="bi bi-calendar-date me-1"></i>Tanggal</th>
+                        <th><i class="bi bi-person me-1"></i>Nama Anggota</th>
+                        <th><i class="bi bi-calendar-month me-1"></i>Periode</th>
+                        <th class="text-end"><i class="bi bi-cash-coin me-1"></i>Nominal</th>
+                        <th><i class="bi bi-credit-card me-1"></i>Metode</th>
+                        <th><i class="bi bi-chat-left-text me-1"></i>Keterangan</th>
+                        <th class="text-center" style="width:70px;"><i class="bi bi-tools me-1"></i>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tableRiwayatKasMasukBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB 3: KAS KELUAR ═══ -->
+          <div class="tab-pane fade" id="tab-kas-keluar" role="tabpanel">
+            <div class="content-card">
+              <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="card-title">
+                    <i class="bi bi-receipt-cutoff" style="color:var(--clr-expense);"></i>
+                    Daftar Pengeluaran Dana
+                  </div>
+                  <div class="card-subtitle">Kelola seluruh rincian uang kas yang dikeluarkan.</div>
+                </div>
+                <button class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1" onclick="openModalTambahKasKeluar()">
+                  <i class="bi bi-plus-lg"></i>Tambah Pengeluaran
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="thead-green">
+                      <tr>
+                        <th class="ps-3" style="width:120px;"><i class="bi bi-calendar-date me-1"></i>Tanggal</th>
+                        <th><i class="bi bi-tag me-1"></i>Kategori</th>
+                        <th><i class="bi bi-card-text me-1"></i>Keperluan</th>
+                        <th class="text-end" style="width:130px;"><i class="bi bi-cash-coin me-1"></i>Nominal</th>
+                        <th><i class="bi bi-person-badge me-1"></i>Penanggung Jawab</th>
+                        <th class="text-center" style="width:85px;"><i class="bi bi-image me-1"></i>Bukti</th>
+                        <th class="text-center" style="width:70px;"><i class="bi bi-tools me-1"></i>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="adminTablePengeluaranBody"></tbody>
+                  </table>
+                </div>
+                <div id="adminEmptyPengeluaran" class="empty-state d-none">
+                  <i class="bi bi-folder2-open empty-icon"></i>
+                  <p>Belum ada catatan pengeluaran untuk periode ini.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB 4: DATA ANGGOTA ═══ -->
+          <div class="tab-pane fade" id="tab-anggota" role="tabpanel">
+            <div class="content-card">
+              <div class="card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="card-title">
+                    <i class="bi bi-people-fill" style="color:var(--g-700);"></i>
+                    Manajemen Anggota Kas
+                  </div>
+                  <div class="card-subtitle">Daftar anggota yang terdaftar dalam iuran kas.</div>
+                </div>
+                <button class="btn btn-green btn-sm d-inline-flex align-items-center gap-1" onclick="openModalTambahAnggota()">
+                  <i class="bi bi-person-plus-fill"></i>Tambah Anggota
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="thead-green">
+                      <tr>
+                        <th class="ps-3" style="width:80px;"><i class="bi bi-hash me-1"></i>ID</th>
+                        <th><i class="bi bi-person me-1"></i>Nama Anggota</th>
+                        <th><i class="bi bi-whatsapp me-1"></i>No. WhatsApp / HP</th>
+                        <th><i class="bi bi-toggle-on me-1"></i>Status</th>
+                        <th class="text-center" style="width:120px;"><i class="bi bi-tools me-1"></i>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="adminTableAnggotaBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB 5: PENGATURAN ═══ -->
+          <div class="tab-pane fade" id="tab-pengaturan" role="tabpanel">
+            <div class="row g-4">
+
+              <!-- Kol Kiri: Integrasi GAS -->
+              <div class="col-lg-7">
+                <div class="content-card h-100">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-table" style="color:var(--clr-income);"></i>
+                      Integrasi Google Spreadsheet
+                    </div>
+                    <div class="card-subtitle">Hubungkan ke Google Apps Script Web App sebagai database.</div>
+                  </div>
+                  <div class="card-body">
+                    <p style="color:var(--tx-muted);font-size:0.88rem;">
+                      Seluruh data kas akan tersimpan di Google Drive Anda secara otomatis. Tanpa biaya hosting tambahan.
+                    </p>
+                    <form id="formApiUrl" class="mb-4">
+                      <div class="mb-3">
+                        <label class="form-label">
+                          <i class="bi bi-link-45deg me-1"></i>Web App URL Google Apps Script
+                        </label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                          <input type="url" class="form-control" id="inputGasUrl" placeholder="https://script.google.com/macros/s/…/exec">
+                        </div>
+                        <div class="form-text">Kosongkan untuk kembali ke Mode Demo (data lokal browser).</div>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-green btn-sm px-3">
+                          <i class="bi bi-floppy-fill me-1"></i>Simpan URL API
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnTestApi">
+                          <i class="bi bi-wifi me-1"></i>Uji Koneksi
+                        </button>
+                      </div>
+                    </form>
+
+                    <div class="alert alert-info border-0 p-3 mb-0" style="font-size:0.85rem;">
+                      <strong><i class="bi bi-info-circle-fill me-1"></i>Cara Setup Cepat:</strong>
+                      <ol class="mb-0 ps-3 mt-2">
+                        <li>Buka Google Sheets baru di <em>sheets.new</em>.</li>
+                        <li>Pilih <strong>Ekstensi &gt; Apps Script</strong>.</li>
+                        <li>Paste seluruh isi file <code>google-apps-script/Code.gs</code>.</li>
+                        <li>Klik <strong>Deploy &gt; New deployment &gt; Web app</strong>.</li>
+                        <li>Pilih <em>Who has access: <strong>Anyone</strong></em>, salin URL → tempel di atas.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kol Kanan: Pengaturan Kas & Akun -->
+              <div class="col-lg-5 d-flex flex-column gap-4">
+
+                <!-- Info Kas -->
+                <div class="content-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-sliders" style="color:var(--g-700);"></i>
+                      Info &amp; Iuran Kas
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <form id="formPengaturanKas">
+                      <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-building me-1"></i>Nama Organisasi / Kas</label>
+                        <input type="text" class="form-control" id="setOrgName" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-cash-coin me-1"></i>Besaran Iuran per Bulan (Rp)</label>
+                        <div class="input-group">
+                          <span class="input-group-text">Rp</span>
+                          <input type="number" class="form-control" id="setIuranNominal" required>
+                        </div>
+                      </div>
+                      <button type="submit" class="btn btn-green btn-sm px-3">
+                        <i class="bi bi-floppy-fill me-1"></i>Simpan Pengaturan
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Ganti Password -->
+                <div class="content-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <i class="bi bi-shield-lock-fill" style="color:var(--clr-amber);"></i>
+                      Ganti Password Admin
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <form id="formGantiPassword">
+                      <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-key-fill me-1"></i>Password Baru</label>
+                        <input type="password" class="form-control" id="setNewPassword" required minlength="4" placeholder="Minimal 4 karakter…">
+                      </div>
+                      <button type="submit" class="btn btn-warning btn-sm px-3">
+                        <i class="bi bi-key me-1"></i>Perbarui Password
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Reset Demo -->
+                <div class="content-card">
+                  <div class="card-body">
+                    <h6 class="fw-bold mb-1" style="color:var(--clr-expense);">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>Reset Data Demo
+                    </h6>
+                    <p class="form-text mb-3">Kembalikan data simulasi ke kondisi awal (hanya Mode Demo).</p>
+                    <button class="btn btn-outline-danger btn-sm" id="btnResetDemo">
+                      <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Data Demo
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /tab-content -->
+      </div>
+    </main>
+  </div><!-- /adminApp -->
+
+  <!-- ═════════════════════ MODALS ═════════════════════ -->
+
+  <!-- Modal Catat Kas Masuk -->
+  <div class="modal fade" id="modalTambahKasMasuk" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-plus-circle-fill me-2" style="color:var(--clr-income);"></i>Catat Kas Masuk
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formTambahKasMasuk">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-person me-1"></i>Pilih Anggota</label>
+              <select class="form-select" id="kmInputAnggota" required></select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-calendar-month me-1"></i>Untuk Bulan</label>
+                <select class="form-select" id="kmInputBulan" required>
+                  <option value="1">Januari</option><option value="2">Februari</option>
+                  <option value="3">Maret</option><option value="4">April</option>
+                  <option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option>
+                  <option value="9">September</option><option value="10">Oktober</option>
+                  <option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-calendar-year me-1"></i>Tahun</label>
+                <input type="number" class="form-control" id="kmInputTahun" required>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-cash-coin me-1"></i>Nominal (Rp)</label>
+                <div class="input-group">
+                  <span class="input-group-text">Rp</span>
+                  <input type="number" class="form-control" id="kmInputNominal" required>
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-credit-card me-1"></i>Metode Bayar</label>
+                <select class="form-select" id="kmInputMetode">
+                  <option value="Tunai">Tunai</option>
+                  <option value="Transfer">Transfer Bank / QRIS</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-calendar-date me-1"></i>Tanggal Bayar</label>
+              <input type="date" class="form-control" id="kmInputTanggal" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-chat-left-text me-1"></i>Keterangan (Opsional)</label>
+              <input type="text" class="form-control" id="kmInputKeterangan" placeholder="Misal: Titip lewat si A">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+              <i class="bi bi-x-lg me-1"></i>Batal
+            </button>
+            <button type="submit" class="btn btn-green btn-sm px-3" id="btnSubmitKasMasuk">
+              <i class="bi bi-check-lg me-1"></i>Simpan Transaksi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Catat Kas Keluar -->
+  <div class="modal fade" id="modalTambahKasKeluar" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-dash-circle-fill me-2" style="color:var(--clr-expense);"></i>Catat Pengeluaran Dana
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formTambahKasKeluar">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-card-text me-1"></i>Keperluan / Kebutuhan</label>
+              <input type="text" class="form-control" id="kkInputKeperluan" placeholder="Misal: Pembelian konsumsi rapat bulanan" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-tag me-1"></i>Kategori</label>
+                <input type="text" class="form-control" id="kkInputKategori" list="kategoriList" placeholder="Pilih / Ketik…" required>
+                <datalist id="kategoriList">
+                  <option value="Konsumsi"><option value="Operasional">
+                  <option value="Sosial"><option value="Perlengkapan">
+                  <option value="Kegiatan"><option value="Lainnya">
+                </datalist>
+              </div>
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-cash-coin me-1"></i>Nominal (Rp)</label>
+                <div class="input-group">
+                  <span class="input-group-text">Rp</span>
+                  <input type="number" class="form-control" id="kkInputNominal" placeholder="0" required>
+                </div>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-calendar-date me-1"></i>Tanggal</label>
+                <input type="date" class="form-control" id="kkInputTanggal" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label"><i class="bi bi-person-badge me-1"></i>Penanggung Jawab</label>
+                <input type="text" class="form-control" id="kkInputPj" placeholder="Nama yang membelanjakan">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-image me-1"></i>Tautan Bukti Nota / Foto (Opsional)</label>
+              <input type="url" class="form-control" id="kkInputBuktiUrl" placeholder="https://drive.google.com/… atau tautan gambar">
+              <div class="form-text">Gunakan link Google Drive publik, Imgur, atau cloud lain.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-chat-left-text me-1"></i>Keterangan Tambahan (Opsional)</label>
+              <textarea class="form-control" id="kkInputKeterangan" rows="2" placeholder="Rincian tambahan…"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+              <i class="bi bi-x-lg me-1"></i>Batal
+            </button>
+            <button type="submit" class="btn btn-danger btn-sm px-3" id="btnSubmitKasKeluar">
+              <i class="bi bi-check-lg me-1"></i>Simpan Pengeluaran
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah / Edit Anggota -->
+  <div class="modal fade" id="modalAnggota" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAnggotaTitle">
+            <i class="bi bi-person-plus-fill me-2" style="color:var(--g-700);"></i>Tambah Anggota
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formAnggota">
+          <input type="hidden" id="anggotaEditId">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-person me-1"></i>Nama Lengkap</label>
+              <input type="text" class="form-control" id="anggotaInputNama" required placeholder="Nama anggota">
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-whatsapp me-1"></i>Nomor WhatsApp / HP</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                <input type="tel" class="form-control" id="anggotaInputNoHp" placeholder="08xxxxxxxxxx">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="bi bi-toggle-on me-1"></i>Status Anggota</label>
+              <select class="form-select" id="anggotaInputStatus">
+                <option value="Aktif">Aktif</option>
+                <option value="Nonaktif">Nonaktif</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+              <i class="bi bi-x-lg me-1"></i>Batal
+            </button>
+            <button type="submit" class="btn btn-green btn-sm px-3" id="btnSubmitAnggota">
+              <i class="bi bi-check-lg me-1"></i>Simpan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>
